@@ -32,6 +32,9 @@ class Quiz
   attr_reader :points_string
   attr_accessor :title, :quizzes
 
+  def self.reset
+    @@quizzes = []
+  end
 
   def initialize(title, options={})
     @output = ''
@@ -40,8 +43,8 @@ class Quiz
     @options = @@default_options.merge(options)
     @seed = srand
     @logger = Logger.new(STDERR)
-    @logger.level = Logger.const_get (options.delete('l') ||
-                                      options.delete('log') || 'warn').upcase
+    #@logger.level = Logger.const_get (options.delete('l') ||
+                                      #options.delete('log') || 'warn').upcase
     if (yaml = options.delete(:yaml))
       @quiz_yaml = YAML::load(IO.read yaml)
     end
@@ -111,6 +114,12 @@ class Quiz
     @questions << q
   end
 
+  def grouped_question(*args, &block)
+    q = Group.new(*args)
+    q.instance_eval(&block)
+    @questions << q
+  end
+
   def select_multiple(*args, &block)
     if args.first.is_a?(Hash) # no question text
       q = SelectMultiple.new('', *args)
@@ -132,7 +141,7 @@ class Quiz
     q.instance_eval(&block)
     @questions << q
   end
-  
+
   def open_assessment(*args, &block)
     q = get_open_assessment(*args, &block)
     @questions << q
